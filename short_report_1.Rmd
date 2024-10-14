@@ -10,13 +10,18 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
 library(GGally)
+library(broom)
+library(patchwork)
 ```
 
 ## Data Wrangling
 ```{r}
 #first spotify data, with crossover variable
 #BE SURE TO DELETE THE LINE BREAK BEFORE RUNNING THIS
-spotify_data_crossover <- read.csv(file = "https://www.math.carleton.edu/ckelling/regression/report_cross_spotify_data.csv")
+spotify_data_crossover <- read.csv(file = "https://www.math.carleton.edu/ckelling/regression/report_cross_spotify_data.csv") %>% 
+  mutate(mode = as.factor(mode),
+         key = as.factor(key),
+         crossover_cat = as.factor(crossover_categ))
 
 
 #second spotify dataset- all data, crossover labelled or not
@@ -52,8 +57,69 @@ ggpairs(full_musc_data, columns = c("loudness", "tempo", "instrumentalness", "va
 
 ```
 
-
 ```{r}
 # add something here
+
+c("Gladys Knight & The Pips", "Stevie Wonder", "The Temptations") -> artists
+# SLR
+
+spotify_data_crossover_filtered <- spotify_data_crossover %>% 
+  filter(artist_name %in% c("Gladys Knight & The Pips", "Stevie Wonder", "The Temptations"))
+
+ggpairs(spotify_data_crossover_filtered, columns = c("energy", "loudness", "danceability"))
+
+danceability_lm <- lm(danceability ~ energy + loudness + crossover_categ, data = spotify_data_crossover_filtered)
+summary(danceability_lm)
+
+# danceability_lm_full <- lm(danceability ~ energy + loudness + mode, data = full_musc_data %>% filter(artist_name %in% artists))
+# summary(danceability_lm_full)
+
+##### Assumptions
+
+danceability_lm_aug <- augment(danceability_lm)
+
+# residual plot
+danceability_lm_res1 <- ggplot(danceability_lm_aug, aes(x = energy, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Energy (std)", y = "residuals",
+       title = "Residual Plot")
+
+danceability_lm_res2 <- ggplot(danceability_lm_aug, aes(x = loudness, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Loudness (dB)", y = "residuals",
+       title = "Residual Plot")
+
+danceability_lm_res3 <- ggplot(danceability_lm_aug, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Predicted Danceability", y = "residuals",
+       title = "Residual Plot")
+
+# normal qq plot
+danceability_lm_qq <- ggplot(danceability_lm_aug, aes(sample = .resid))+
+  geom_qq() +
+  geom_qq_line() +
+  labs(y = "Sample Quantiles", x = "Normal Quantiles")
+
+combined_plot <- (danceability_lm_res1 | danceability_lm_res2) / (danceability_lm_res3 | danceability_lm_qq)
+combined_plot + 
+  plot_layout(guides = 'collect') + 
+  plot_annotation(title = "Residual Plot and Normal Q-Q Plot of Spotify MLR")
+```
+
+```{r}
+# Vis
+
+ggplot(data = spotify_data_crossover_filtered, aes(x = energy, y = danceability)) + 
+  geom_point() + 
+  facet_grid(cols = vars(crossover_categ)) +
+  geom_smooth(method = "lm", se = F)
+
+ggplot(data = spotify_data_crossover_filtered, aes(x = loudness, y = danceability)) + 
+  geom_point() + 
+  facet_grid(cols = vars(crossover_categ)) +
+  geom_smooth(method = "lm", se = F)
 ```
 
