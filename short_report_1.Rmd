@@ -21,7 +21,7 @@ library(patchwork)
 spotify_data_crossover <- read.csv(file = "https://www.math.carleton.edu/ckelling/regression/report_cross_spotify_data.csv") %>% 
   mutate(mode = as.factor(mode),
          key = as.factor(key),
-         crossover_cat = as.factor(crossover_categ))
+         crossover_categ = as.factor(crossover_categ))
 
 
 #second spotify dataset- all data, crossover labelled or not
@@ -76,7 +76,7 @@ summary(danceability_lm)
 
 ##### Assumptions
 
-danceability_lm_aug <- augment(danceability_lm)
+danceability_lm_aug <- augment(danceability_lm, data = spotify_data_crossover_filtered)
 
 # residual plot
 danceability_lm_res1 <- ggplot(danceability_lm_aug, aes(x = energy, y = .resid)) +
@@ -107,6 +107,16 @@ combined_plot <- (danceability_lm_res1 | danceability_lm_res2) / (danceability_l
 combined_plot + 
   plot_layout(guides = 'collect') + 
   plot_annotation(title = "Residual Plot and Normal Q-Q Plot of Spotify MLR")
+
+ggplot(danceability_lm_aug, aes(x = artist_name, y = .resid)) +
+  geom_boxplot() + 
+  labs(y = "resid", x = "Artist")
+
+# ggplot(danceability_lm_aug, aes(x = album_release_year, y = .resid)) +
+#   geom_boxplot() + 
+#   labs(y = "resid", x = "Year")
+########FIX THIS LATER############
+
 ```
 
 ```{r}
@@ -121,5 +131,10 @@ ggplot(data = spotify_data_crossover_filtered, aes(x = loudness, y = danceabilit
   geom_point() + 
   facet_grid(cols = vars(crossover_categ)) +
   geom_smooth(method = "lm", se = F)
+```
+```{r}
+######## R^2 #########
+
+
 ```
 
