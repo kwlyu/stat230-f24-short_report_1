@@ -7,24 +7,48 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(GGally)
 ```
 
-## R Markdown
+## Data Wrangling
+```{r}
+#first spotify data, with crossover variable
+#BE SURE TO DELETE THE LINE BREAK BEFORE RUNNING THIS
+spotify_data_crossover <- read.csv(file = "https://www.math.carleton.edu/ckelling/regression/report_cross_spotify_data.csv")
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#second spotify dataset- all data, crossover labelled or not
+#BE SURE TO DELETE THE LINE BREAK BEFORE RUNNING THIS
+full_musc_data <- read.csv(file = "https://www.math.carleton.edu/ckelling/regression/report_nocross_spotify_data.csv") %>% 
+  mutate(mode = as.factor(mode),
+         key = as.factor(key))
 
-```{r cars}
-summary(cars)
+
+#subset to just a few artists
+# spotify_data_subset <- spotify_data_crossover %>%
+#   filter(artist_name %in% c(artist, names, here))
+
+glimpse(full_musc_data)
+
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+## EDA
+```{r}
+affective_musc_lm <- lm(valence ~ danceability*energy, data = full_musc_data)
+summary(affective_musc_lm)
+
+ggpairs(full_musc_data, columns = c("mode", "tempo", "valence"))
+
+ggpairs(full_musc_data, columns = c("danceability", "energy", "valence"))
+
+live_musc_lm <- lm(liveness ~ loudness+tempo+instrumentalness+valence, data = full_musc_data)
+summary(live_musc_lm)
+
+ggpairs(full_musc_data, columns = c("loudness", "tempo", "instrumentalness", "valence", "liveness"))
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
