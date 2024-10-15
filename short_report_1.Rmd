@@ -68,7 +68,7 @@ spotify_data_crossover_filtered <- spotify_data_crossover %>%
 
 ggpairs(spotify_data_crossover_filtered, columns = c("energy", "loudness", "danceability"))
 
-danceability_lm <- lm(danceability ~ energy + loudness + crossover_categ, data = spotify_data_crossover_filtered)
+danceability_lm <- lm(danceability ~ loudness + energy * crossover_categ, data = spotify_data_crossover_filtered)
 summary(danceability_lm)
 
 # danceability_lm_full <- lm(danceability ~ energy + loudness + mode, data = full_musc_data %>% filter(artist_name %in% artists))
@@ -125,16 +125,20 @@ ggplot(danceability_lm_aug, aes(x = artist_name, y = .resid)) +
 ggplot(data = spotify_data_crossover_filtered, aes(x = energy, y = danceability)) + 
   geom_point() + 
   facet_grid(cols = vars(crossover_categ)) +
-  geom_smooth(method = "lm", se = F)
+  geom_smooth(method = "lm", se = T)
 
 ggplot(data = spotify_data_crossover_filtered, aes(x = loudness, y = danceability)) + 
   geom_point() + 
   facet_grid(cols = vars(crossover_categ)) +
-  geom_smooth(method = "lm", se = F)
+  geom_smooth(method = "lm", se = T)
 ```
 ```{r}
 ######## R^2 #########
 
+danceability_lm_full <- danceability_lm
+danceability_lm_red <- lm(danceability ~ loudness + energy, data = spotify_data_crossover_filtered)
+danceability_lm_full2 <- lm(danceability ~ energy + loudness*crossover_categ, data = spotify_data_crossover_filtered)
 
+anova(danceability_lm_red, danceability_lm_full)
 ```
 
