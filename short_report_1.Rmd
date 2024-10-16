@@ -31,45 +31,47 @@ full_musc_data <- read.csv(file = "https://www.math.carleton.edu/ckelling/regres
          key = as.factor(key))
 
 
-#subset to just a few artists
-# spotify_data_subset <- spotify_data_crossover %>%
-#   filter(artist_name %in% c(artist, names, here))
-
-glimpse(full_musc_data)
-
-```
-
-
-
-## EDA
-```{r}
-affective_musc_lm <- lm(valence ~ danceability*energy, data = full_musc_data)
-summary(affective_musc_lm)
-
-ggpairs(full_musc_data, columns = c("mode", "tempo", "valence"))
-
-ggpairs(full_musc_data, columns = c("energy", "loudness", "danceability")) ->
-  mtrx_plot
-ggsave("matrix_plot.png", plot = mtrx_plot)
-
-live_musc_lm <- lm(liveness ~ loudness+tempo+instrumentalness+valence, data = full_musc_data)
-summary(live_musc_lm)
-
-ggpairs(full_musc_data, columns = c("loudness", "tempo", "instrumentalness", "valence", "liveness"))
-
-```
-
-```{r}
-# add something here
-
 c("Gladys Knight & The Pips", "Stevie Wonder", "The Temptations") -> artists
 # SLR
 
 spotify_data_crossover_filtered <- spotify_data_crossover %>% 
   filter(artist_name %in% c("Gladys Knight & The Pips", "Stevie Wonder", "The Temptations"))
 
-ggpairs(spotify_data_crossover_filtered, columns = c("energy", "loudness", "danceability"))
+glimpse(spotify_data_crossover_filtered)
+```
 
+
+## EDA
+
+```{r}
+# scatterplot matrix
+ggpairs(spotify_data_crossover_filtered, columns = c("energy", "loudness", "danceability"))
+ggsave("scat_mtrx.png")
+
+# Vis
+ggplot(data = spotify_data_crossover_filtered, aes(x = energy, y = danceability)) + 
+  geom_point() + 
+  facet_grid(cols = vars(crossover_categ)) +
+  geom_smooth(method = "lm", se = T)
+
+ggplot(data = spotify_data_crossover_filtered, aes(x = loudness, y = danceability)) + 
+  geom_point() + 
+  facet_grid(cols = vars(crossover_categ)) +
+  geom_smooth(method = "lm", se = T)
+```
+
+```{r}
+# standardize
+standardize <- function(x, na.rm = FALSE) {
+  (x - mean(x, na.rm = na.rm)) / 
+    sd(x, na.rm = na.rm)
+}
+
+
+```
+
+## MLR and Assumptions
+```{r}
 danceability_lm <- lm(danceability ~ loudness + energy * crossover_categ, data = spotify_data_crossover_filtered)
 summary(danceability_lm)
 
@@ -124,19 +126,8 @@ ggplot(danceability_lm_aug, aes(x = artist_name, y = .resid)) +
 
 ```
 
-```{r}
-# Vis
 
-ggplot(data = spotify_data_crossover_filtered, aes(x = energy, y = danceability)) + 
-  geom_point() + 
-  facet_grid(cols = vars(crossover_categ)) +
-  geom_smooth(method = "lm", se = T)
-
-ggplot(data = spotify_data_crossover_filtered, aes(x = loudness, y = danceability)) + 
-  geom_point() + 
-  facet_grid(cols = vars(crossover_categ)) +
-  geom_smooth(method = "lm", se = T)
-```
+## R^2
 ```{r}
 ######## R^2 #########
 
