@@ -67,6 +67,11 @@ standardize <- function(x, na.rm = FALSE) {
     sd(x, na.rm = na.rm)
 }
 
+crossover_std <- spotify_data_crossover_filtered %>% 
+  mutate(across(c(danceability, loudness, energy), standardize))
+
+ggpairs(crossover_std, columns = c("energy", "loudness", "danceability"))
+ggsave("scat_mtrx_std.png")
 
 ```
 
@@ -75,11 +80,14 @@ standardize <- function(x, na.rm = FALSE) {
 danceability_lm <- lm(danceability ~ loudness + energy * crossover_categ, data = spotify_data_crossover_filtered)
 summary(danceability_lm)
 
-danceability_lm_full2 <- lm(danceability ~ log(loudness+61) + log(energy+1)*crossover_categ, data = spotify_data_crossover_filtered)
+danceability_lm_std <- lm(danceability ~ loudness + energy * crossover_categ, data = crossover_std)
+summary(danceability_lm_std)
 
-danceability_lm <- danceability_lm_full2
-# danceability_lm_full <- lm(danceability ~ energy + loudness + mode, data = full_musc_data %>% filter(artist_name %in% artists))
-# summary(danceability_lm_full)
+# danceability_lm_full2 <- lm(danceability ~ log(loudness+61) + log(energy+1)*crossover_categ, data = spotify_data_crossover_filtered)
+# 
+# danceability_lm <- danceability_lm_full2
+# # danceability_lm_full <- lm(danceability ~ energy + loudness + mode, data = full_musc_data %>% filter(artist_name %in% artists))
+# # summary(danceability_lm_full)
 
 ##### Assumptions
 
@@ -135,6 +143,6 @@ danceability_lm_full <- danceability_lm
 danceability_lm_red <- lm(danceability ~ loudness + energy, data = spotify_data_crossover_filtered)
 danceability_lm_full2 <- lm(danceability ~ log(loudness+61) + log(energy+1)*crossover_categ, data = spotify_data_crossover_filtered)
 
-anova(danceability_lm_full, danceability_lm_full2)
+anova(danceability_lm_red, danceability_lm)
 ```
 
