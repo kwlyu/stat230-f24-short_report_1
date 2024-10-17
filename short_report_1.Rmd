@@ -12,6 +12,7 @@ library(ggplot2)
 library(GGally)
 library(broom)
 library(patchwork)
+library(purrr)
 ```
 
 ## Data Wrangling
@@ -127,10 +128,15 @@ ggplot(danceability_lm_aug, aes(x = artist_name, y = .resid)) +
   geom_boxplot() + 
   labs(y = "resid", x = "Artist")
 
-# ggplot(danceability_lm_aug, aes(x = album_release_year, y = .resid)) +
-#   geom_boxplot() + 
-#   labs(y = "resid", x = "Year")
-########FIX THIS LATER############
+ggplot(danceability_lm_aug, aes(x = as.factor(album_release_year), y = .resid)) +
+  geom_boxplot() +
+  labs(y = "resid", x = "Year") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(danceability_lm_aug, aes(x = album_release_year, y = .resid)) +
+  geom_point() +
+  labs(y = "resid", x = "Year") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
 
