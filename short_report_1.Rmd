@@ -135,6 +135,8 @@ ggplot(danceability_lm_aug, aes(x = as.factor(album_release_year), y = .resid)) 
 
 ggplot(danceability_lm_aug, aes(x = album_release_year, y = .resid)) +
   geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  # geom_smooth(method = "lm", se = T) + 
   labs(y = "resid", x = "Year") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
