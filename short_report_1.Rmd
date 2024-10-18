@@ -113,7 +113,7 @@ res_qq <- combined_plot +
   plot_layout(guides = 'collect') + 
   plot_annotation(title = "Residual Plot and Normal Q-Q Plot of Spotify MLR") 
 res_qq
-res_qq <- ggsave("res+qq.png", res_qq)
+ggsave("res+qq.png", res_qq)
 
 # Cluster independence
 cluster_dep <- ggplot(danceability_lm_aug, aes(x = artist_name, y = .resid)) +
