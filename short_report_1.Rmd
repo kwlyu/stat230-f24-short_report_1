@@ -1,6 +1,6 @@
 ---
-title: "Short Report 1"
-author: "Kunwu Lyu"
+title: "Short Report 1 Code"
+author: "Dongyoung Kim and Kunwu Lyu"
 date: "`r Sys.Date()`"
 output: pdf_document
 ---
@@ -19,11 +19,11 @@ library(purrr)
 ```{r}
 #first spotify data, with crossover variable
 #BE SURE TO DELETE THE LINE BREAK BEFORE RUNNING THIS
-spotify_data_crossover <- read.csv(file = "https://www.math.carleton.edu/ckelling/regression/report_cross_spotify_data.csv") %>% 
+spotify_data_crossover <- read.csv(file = 
+                                     "https://www.math.carleton.edu/ckelling/regression/report_cross_spotify_data.csv") %>% 
   mutate(mode = as.factor(mode),
          key = as.factor(key),
          crossover_categ = as.factor(crossover_categ))
-
 
 #second spotify dataset- all data, crossover labelled or not
 #BE SURE TO DELETE THE LINE BREAK BEFORE RUNNING THIS
@@ -31,71 +31,56 @@ full_musc_data <- read.csv(file = "https://www.math.carleton.edu/ckelling/regres
   mutate(mode = as.factor(mode),
          key = as.factor(key))
 
-
-c("Gladys Knight & The Pips", "Stevie Wonder", "The Temptations") -> artists
-# SLR
-
+# select specified artists and create a new data frame
+artists <- c("Gladys Knight & The Pips", "Stevie Wonder", "The Temptations") 
 spotify_data_crossover_filtered <- spotify_data_crossover %>% 
-  filter(artist_name %in% c("Gladys Knight & The Pips", "Stevie Wonder", "The Temptations"))
+  filter(artist_name %in% 
+           c("Gladys Knight & The Pips", "Stevie Wonder", "The Temptations"))
 
 glimpse(spotify_data_crossover_filtered)
 ```
 
-
 ## EDA
-
 ```{r}
 # scatterplot matrix
-ggpairs(spotify_data_crossover_filtered, columns = c("energy", "loudness", "danceability"))
-ggsave("scat_mtrx.png")
+ggpairs(spotify_data_crossover_filtered, 
+        columns = c("energy", "loudness", "danceability"))
+ggsave("scat_mtrx.png") # save as png for better importing
 
 # Vis
-ggplot(data = spotify_data_crossover_filtered, aes(x = energy, y = danceability)) + 
+# EDA with energy vs danceability
+eda_energy <- ggplot(data = spotify_data_crossover_filtered, 
+                     aes(x = energy, y = danceability)) + 
   geom_point() + 
-  facet_grid(cols = vars(crossover_categ)) +
-  labs(x = "Energy", y = "Danceability", title = "Energy vs Danceability") -> p1
+  facet_grid(cols = vars(crossover_categ)) + # separate by crossover
+  labs(x = "Energy", y = "Danceability", title = "Energy vs Danceability")
 
-ggplot(data = spotify_data_crossover_filtered, aes(x = loudness, y = danceability)) + 
+# EDA with loudness vs danceability
+eda_loudness <- ggplot(data = spotify_data_crossover_filtered, 
+                       aes(x = loudness, y = danceability)) + 
   geom_point() + 
   labs(x = "Loudness", y = "Danceability", title = "Loudness vs Danceability") +
-  facet_grid(cols = vars(crossover_categ)) -> p2
+  facet_grid(cols = vars(crossover_categ))  # separate by crossover
 
-ggsave("eda_energy.png", p1)
-ggsave("eda_loudness.png", p2)
+eda_energy
+eda_loudness
+
+ggsave("eda_energy.png", eda_energy)
+ggsave("eda_loudness.png", eda_loudness)
 ```
 
-```{r}
-# standardize
-standardize <- function(x, na.rm = FALSE) {
-  (x - mean(x, na.rm = na.rm)) / 
-    sd(x, na.rm = na.rm)
-}
-
-crossover_std <- spotify_data_crossover_filtered %>% 
-  mutate(across(c(danceability, loudness, energy), standardize))
-
-ggpairs(crossover_std, columns = c("energy", "loudness", "danceability"))
-ggsave("scat_mtrx_std.png")
-
-```
 
 ## MLR and Assumptions
 ```{r}
-danceability_lm <- lm(danceability ~ loudness + energy * crossover_categ, data = spotify_data_crossover_filtered)
+# MLR Model
+danceability_lm <- lm(danceability ~ loudness + energy * crossover_categ, 
+                      data = spotify_data_crossover_filtered)
 summary(danceability_lm)
 
-danceability_lm_std <- lm(danceability ~ loudness + energy * crossover_categ, data = crossover_std)
-summary(danceability_lm_std)
-
-# danceability_lm_full2 <- lm(danceability ~ log(loudness+61) + log(energy+1)*crossover_categ, data = spotify_data_crossover_filtered)
-# 
-# danceability_lm <- danceability_lm_full2
-# # danceability_lm_full <- lm(danceability ~ energy + loudness + mode, data = full_musc_data %>% filter(artist_name %in% artists))
-# # summary(danceability_lm_full)
-
-##### Assumptions
-
-danceability_lm_aug <- augment(danceability_lm, data = spotify_data_crossover_filtered)
+# Assumptions Checking
+danceability_lm_aug <- augment(danceability_lm, # add original data for later
+                                                # checking assumptions
+                               data = spotify_data_crossover_filtered) 
 
 # residual plot
 danceability_lm_res1 <- ggplot(danceability_lm_aug, aes(x = energy, y = .resid)) +
@@ -122,43 +107,45 @@ danceability_lm_qq <- ggplot(danceability_lm_aug, aes(sample = .resid))+
   geom_qq_line() +
   labs(y = "Sample Quantiles", x = "Normal Quantiles")
 
-combined_plot <- (danceability_lm_res1 | danceability_lm_res2) / (danceability_lm_res3 | danceability_lm_qq)
-combined_plot + 
+combined_plot <- (danceability_lm_res1 | danceability_lm_res2) / 
+  (danceability_lm_res3 | danceability_lm_qq)
+res_qq <- combined_plot + 
   plot_layout(guides = 'collect') + 
-  plot_annotation(title = "Residual Plot and Normal Q-Q Plot of Spotify MLR") -> p3
+  plot_annotation(title = "Residual Plot and Normal Q-Q Plot of Spotify MLR") 
+res_qq
+res_qq <- ggsave("res+qq.png", res_qq)
 
-ggsave("res+qq.png", p3)
-
-ggplot(danceability_lm_aug, aes(x = artist_name, y = .resid)) +
+# Cluster independence
+cluster_dep <- ggplot(danceability_lm_aug, aes(x = artist_name, y = .resid)) +
   geom_boxplot() + 
   labs(y = "resid", x = "Artist") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))-> p4
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+# Serial independence, w/ boxplot
 ggplot(danceability_lm_aug, aes(x = as.factor(album_release_year), y = .resid)) +
   geom_boxplot() +
   labs(y = "resid", x = "Year") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggplot(danceability_lm_aug, aes(x = album_release_year, y = .resid)) +
+# Serial independence, w/ scatterplot (better visuals)
+serial_dep <- ggplot(danceability_lm_aug, 
+                     aes(x = album_release_year, y = .resid)) +
   geom_point() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   # geom_smooth(method = "lm", se = T) + 
   labs(y = "resid", x = "Year") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) -> p5
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
-p4 | p5 -> p6
-
-ggsave("independence.png", p6)
+cluster_dep | serial_dep -> independence_check
+independence_check
+ggsave("independence.png", independence_check)
 ```
 
 
 ## R^2
 ```{r}
 ######## R^2 #########
-
-danceability_lm_full <- danceability_lm
 danceability_lm_red <- lm(danceability ~ loudness + energy, data = spotify_data_crossover_filtered)
-danceability_lm_full2 <- lm(danceability ~ log(loudness+61) + log(energy+1)*crossover_categ, data = spotify_data_crossover_filtered)
 
 anova(danceability_lm_red, danceability_lm)
 ```
