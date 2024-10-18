@@ -53,13 +53,15 @@ ggsave("scat_mtrx.png")
 ggplot(data = spotify_data_crossover_filtered, aes(x = energy, y = danceability)) + 
   geom_point() + 
   facet_grid(cols = vars(crossover_categ)) +
-  labs(x = "Energy", y = "Danceability", title = "Energy vs Danceability")
+  labs(x = "Energy", y = "Danceability", title = "Energy vs Danceability") -> p1
 
 ggplot(data = spotify_data_crossover_filtered, aes(x = loudness, y = danceability)) + 
   geom_point() + 
   labs(x = "Loudness", y = "Danceability", title = "Loudness vs Danceability") +
-  facet_grid(cols = vars(crossover_categ)) 
+  facet_grid(cols = vars(crossover_categ)) -> p2
 
+ggsave("eda_energy.png", p1)
+ggsave("eda_loudness.png", p2)
 ```
 
 ```{r}
@@ -123,11 +125,14 @@ danceability_lm_qq <- ggplot(danceability_lm_aug, aes(sample = .resid))+
 combined_plot <- (danceability_lm_res1 | danceability_lm_res2) / (danceability_lm_res3 | danceability_lm_qq)
 combined_plot + 
   plot_layout(guides = 'collect') + 
-  plot_annotation(title = "Residual Plot and Normal Q-Q Plot of Spotify MLR")
+  plot_annotation(title = "Residual Plot and Normal Q-Q Plot of Spotify MLR") -> p3
+
+ggsave("res+qq.png", p3)
 
 ggplot(danceability_lm_aug, aes(x = artist_name, y = .resid)) +
   geom_boxplot() + 
-  labs(y = "resid", x = "Artist")
+  labs(y = "resid", x = "Artist") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))-> p4
 
 ggplot(danceability_lm_aug, aes(x = as.factor(album_release_year), y = .resid)) +
   geom_boxplot() +
@@ -139,8 +144,11 @@ ggplot(danceability_lm_aug, aes(x = album_release_year, y = .resid)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   # geom_smooth(method = "lm", se = T) + 
   labs(y = "resid", x = "Year") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) -> p5
 
+p4 | p5 -> p6
+
+ggsave("independence.png", p6)
 ```
 
 
